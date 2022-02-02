@@ -10,9 +10,11 @@ import { setConfigDAL, getConfigDAL } from "./dal.js";
 
 
 const PORT = process.env.PORT || 5000;
-const REDIS_PORT = process.env.REDIS_PORT || 6379;
+// const REDIS_PORT = process.env.REDIS_PORT || 6379;
 
-const client = redis.createClient(REDIS_PORT);
+const client = redis.createClient({
+    url: "redis://:p301824da061453386cd783a736ed5284d7a5d793523606dfafbd7b57c54bdcd9@ec2-50-19-244-202.compute-1.amazonaws.com:17849"
+});
 client.connect();
 client.on("connect", () => {
     console.log("Connected to Redis...");
