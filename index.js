@@ -3,18 +3,19 @@
 // const redis = require('redis');
 
 import express from "express";
-import * as fetch from "node-fetch";
 import redis from "redis";
-import { setConfigDAL, getConfigDAL } from "./dal.js";
-
-
+import { setConfig, getConfig } from "./requests.js";
 
 const PORT = process.env.PORT || 5000;
-// const REDIS_PORT = process.env.REDIS_PORT || 6379;
 
-const client = redis.createClient({
-    url: "redis://:p301824da061453386cd783a736ed5284d7a5d793523606dfafbd7b57c54bdcd9@ec2-50-19-244-202.compute-1.amazonaws.com:17849"
-});
+let config = {};
+if(process.env.NODE_ENV != "development") {
+    config["url"] = "redis://:p301824da061453386cd783a736ed5284d7a5d793523606dfafbd7b57c54bdcd9@ec2-50-19-244-202.compute-1.amazonaws.com:17849";
+} else {
+    console.log("Dev mode running...");
+}
+
+const client = redis.createClient(config);
 client.connect();
 client.on("connect", () => {
     console.log("Connected to Redis...");
@@ -27,37 +28,19 @@ app.use((req, res, next) => {
     next();
 });
 
-async function setConfig(req, res, next) {
-    const { config_id, config_body } = req.body;
-
-    try {
-        let wrapper = await setConfigDAL(client, config_id, config_body);
-        console.log(wrapper);
-        res.status(200);
-        res.send("OK");
-    } catch(err) {
-        console.log(err);
-        throw err;
-    }
-}
-
-async function getConfig(req, res, next) {
-    const { config_id } = req.body;
-
-    try {
-        let reply = await getConfigDAL(client, config_id);
-        console.log(reply);
-        res.status(200);
-        res.send(reply);
-    } catch(err) {
-        console.log(err);
-        throw err;
-    }
-}
-
-app.post('/config/setConfig', setConfig);
-app.get('/config/getConfig', getConfig);
+app.post('/config/setConfig', setHandle);
+app.get('/config/getConfig', getHandle);
 
 app.listen(PORT, () => {
     console.log(`Server listening on ${PORT}`);
 });
+
+
+
+async function setHandle(req, res, next) {
+    setConfig(req, res, client);
+}
+
+async function getHandle(req, res, next) {
+    getConfig(req, res, client);
+}
