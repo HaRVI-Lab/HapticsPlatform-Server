@@ -45,12 +45,11 @@ async function setHandle(req, res, next) {
 }
 
 async function getHandle(req, res, next) {
-    getConfig(req, res, client);
+    getConfig(req, res, client, []);
 }
 
 async function delHandle(req, res, next) {
-    let logs = [];
-    delConfig(req, res, client, logs);
+    delConfig(req, res, client);
 }
 
 async function updateHandle(req, res, next) {
