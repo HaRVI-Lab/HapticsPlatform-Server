@@ -2,9 +2,9 @@
 // const fetch = require('node-fetch');
 // const redis = require('redis');
 
-import express from "express";
+import express, { application } from "express";
 import redis from "redis";
-import { setConfig, getConfig } from "./requests.js";
+import { setConfig, getConfig, delConfig, updateConfig } from "./requests.js";
 
 const PORT = process.env.PORT || 5000;
 
@@ -28,8 +28,11 @@ app.use((req, res, next) => {
     next();
 });
 
-app.post('/config/setConfig', setHandle);
 app.get('/config/getConfig', getHandle);
+
+app.post('/config/setConfig', setHandle);
+app.post('/config/delConfig', delHandle);
+app.post('/config/updateConfig', updateHandle);
 
 app.listen(PORT, () => {
     console.log(`Server listening on ${PORT}`);
@@ -43,4 +46,12 @@ async function setHandle(req, res, next) {
 
 async function getHandle(req, res, next) {
     getConfig(req, res, client);
+}
+
+async function delHandle(req, res, next) {
+    delConfig(req, res, client);
+}
+
+async function updateHandle(req, res, next) {
+    updateConfig(req, res, client);
 }
