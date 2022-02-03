@@ -1,11 +1,14 @@
 import assert from 'assert';
-import { config } from 'process';
 import redis from "redis";
 import sinon from "sinon";
+import { mockRequest, mockResponse } from 'mock-req-res';
 import { setConfigDAL, getConfigDAL, delConfigDAL, existConfigDAL } from "../dal.js";
+import { setConfig, getConfig, delConfig, updateConfig } from "../requests.js";
 
 let db = new Map();
 let client = redis.createClient();
+let req = mockRequest();
+let res = mockResponse();
 let setMock = sinon.stub(client, "set").callsFake(fakeSet);
 let getMock = sinon.stub(client, "get").callsFake(fakeGet);
 let delMock = sinon.stub(client, "del").callsFake(fakeDel);
@@ -17,7 +20,12 @@ function fakeSet(config_id, data) {
 }
 
 function fakeGet(config_id) {
-    return db.get(config_id);
+    let success = db.has(config_id);
+    let reply = null;
+    if(success) {
+        reply = db.get(config_id);
+    }
+    return success, reply;
 }
 
 function fakeDel(config_id) {
@@ -28,55 +36,203 @@ function fakeExist(config_id) {
     return db.has(config_id) ? 1 : 0;
 }
 
+function fakeSend(msg) {
+    return msg;
+}
+
 describe('Server Unit Tests', function() {
     this.beforeEach(() => {
         db = new Map();
     });
 
     describe('DAL Functions', async () => {
-      it('setConfigDAL', async () => {
-        let config_id = "mock_id1";
-        let data = {
-            f1: "foo",
-            f2: "bar",
-        };
-        await setConfigDAL(client, config_id, data);
-        assert.equal(db.get(config_id), JSON.stringify(data));
-      });
-
-      it('getConfigDAL', async () => {
-        let config_id = "mock_id1";
-        let dataStr = JSON.stringify({
-            f1: "foo",
-            f2: "bar",
+        it('setConfigDAL', async () => {
+            let config_id = "mock_id1";
+            let data = {
+                f1: "foo",
+                f2: "bar",
+            };
+            await setConfigDAL(client, config_id, data);
+            assert.equal(db.get(config_id), JSON.stringify(data));
         });
-        db.set(config_id, dataStr);
 
-        let { _, reply } = await getConfigDAL(client, config_id);
-        assert.equal(reply, dataStr);
-      });
+        it('getConfigDAL', async () => {
+            let config_id = "mock_id1";
+            let dataStr = JSON.stringify({
+                f1: "foo",
+                f2: "bar",
+            });
+            db.set(config_id, dataStr);
 
-      it('delConfigDAL', async () => {
-        let config_id = "mock_id1";
-        let data = {
-            f1: "foo",
-            f2: "bar",
-        };
-        db.set(config_id, JSON.stringify(data));
-
-        await delConfigDAL(client, config_id);
-        assert.equal(db.size, 0);
-      });
-
-      it('existConfigDAL', async () => {
-        let config_id = "mock_id1";
-        let dataStr = JSON.stringify({
-            f1: "foo",
-            f2: "bar",
+            let { _, reply } = await getConfigDAL(client, config_id);
+            assert.equal(reply, dataStr);
         });
-        db.set(config_id, dataStr);
-        let reply = await existConfigDAL(client, config_id);
-        assert.equal(reply, true);
-      });
+
+        it('delConfigDAL', async () => {
+            let config_id = "mock_id1";
+            let data = {
+                f1: "foo",
+                f2: "bar",
+            };
+            db.set(config_id, JSON.stringify(data));
+
+            await delConfigDAL(client, config_id);
+            assert.equal(db.size, 0);
+        });
+
+        it('existConfigDAL', async () => {
+            let config_id = "mock_id1";
+            let dataStr = JSON.stringify({
+                f1: "foo",
+                f2: "bar",
+            });
+            db.set(config_id, dataStr);
+            let reply = await existConfigDAL(client, config_id);
+            assert.equal(reply, true);
+        });
+        });
+
+        describe('Requests', async () => {
+            this.beforeEach(() => {
+                req = mockRequest();
+                res = mockResponse();
+            });
+
+            it('setConfig - success', async () => {
+                let configID = "mock_id1";
+                let configBody = {
+                    f1: "foo",
+                    f2: "bar",
+                };
+
+                req.body = {
+                    "config_id": configID,
+                    "config_body": configBody,
+                };
+
+                await setConfig(req, res, client);
+                assert.equal(db.get(configID), JSON.stringify(configBody));
+            });
+            
+            it('setConfig - fail', async () => {
+                let configID = "mock_id1";
+                let configBody = {
+                    f1: "foo",
+                    f2: "bar",
+                };
+                db.set(configID, JSON.stringify(configBody));
+
+                req.body = {
+                    "config_id": configID,
+                    "config_body": {
+                        f1: "fo",
+                        f2: "ba",
+                    },
+                };
+
+                await setConfig(req, res, client);
+                assert.equal(db.get(configID), JSON.stringify(configBody));
+            });
+
+            it('getConfig - valid', async () => {
+                let configID = "mock_id1";
+                let configBody = {
+                    f1: "foo",
+                    f2: "bar",
+                };
+                db.set(configID, JSON.stringify(configBody));
+
+                req.body = {
+                    "config_id": configID,
+                };
+
+                let logs = [];
+                await getConfig(req, res, client, logs);
+                assert.equal(logs.length, 1);
+                assert.equal(logs[0], JSON.stringify(configBody));
+            });
+
+            it('getConfig - empty', async () => {
+                req.body = {
+                    "config_id": "mock_id1",
+                };
+
+                let logs = [];
+                await getConfig(req, res, client, logs);
+                assert.equal(logs.length, 1);
+                assert.equal(logs[0], JSON.stringify({}));
+            });
+
+            it('delConfig - success', async () => {
+                let configID = "mock_id1";
+                let configBody = {
+                    f1: "foo",
+                    f2: "bar",
+                };
+                db.set(configID, JSON.stringify(configBody));
+
+                req.body = {
+                    "config_id": configID,
+                };
+
+                await delConfig(req, res, client);
+                assert.equal(db.size, 0);
+            });
+
+            it('delConfig - fail', async () => {
+                let configID = "mock_id1";
+                let configBody = {
+                    f1: "foo",
+                    f2: "bar",
+                };
+                db.set(configID, JSON.stringify(configBody));
+
+                req.body = {
+                    "config_id": "mock_id2",
+                };
+
+                await delConfig(req, res, client);
+                assert.equal(db.size, 1);
+            });
+
+            it('updateConfig - success', async () => {
+                let configID = "mock_id1";
+                db.set(configID, JSON.stringify({
+                    f1: "foo",
+                    f2: "bar",
+                }));
+
+                let updateBody = {
+                    f1: "fo",
+                    f2: "ba",
+                }
+                req.body = {
+                    "config_id": configID,
+                    "config_body": updateBody,
+                };
+
+                await updateConfig(req, res, client);
+                assert.equal(db.get(configID), JSON.stringify(updateBody));
+            });
+
+            it('updateConfig - fail', async () => {
+                let configID = "mock_id1";
+                let configBody = {
+                    f1: "foo",
+                    f2: "bar",
+                };
+                db.set(configID, JSON.stringify(configBody));
+
+                req.body = {
+                    "config_id": "mock_id2",
+                    "config_body": {
+                        f1: "fo",
+                        f2: "ba",
+                    },
+                };
+
+                await updateConfig(req, res, client);
+                assert.equal(db.get(configID), JSON.stringify(configBody));
+            });
     });
-  });
+});

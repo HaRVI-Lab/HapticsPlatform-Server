@@ -54,7 +54,7 @@ export async function updateConfig(req, res, client) {
     }
 }
 
-export async function getConfig(req, res, client) {
+export async function getConfig(req, res, client, logs) {
     const { config_id } = req.body;
     try {
         let status = 200;
@@ -63,6 +63,7 @@ export async function getConfig(req, res, client) {
         if(success) {
             msg = reply;
         }
+        logs.push(msg);
         res.status(status);
         res.send(msg);
     } catch(err) {

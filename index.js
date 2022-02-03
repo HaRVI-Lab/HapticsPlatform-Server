@@ -49,7 +49,7 @@ async function getHandle(req, res, next) {
 }
 
 async function delHandle(req, res, next) {
-    delConfig(req, res, client);
+    delConfig(req, res, client, []);
 }
 
 async function updateHandle(req, res, next) {
