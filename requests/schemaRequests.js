@@ -1,17 +1,13 @@
 import { setSchemaDAL, getSchemaDAL, delSchemaDAL, existSchemaDAL } from "../dal/schemaDAL.js";
 import { schemaTree } from "../model/schema-tree.js";
+import { sendResponse } from "../util/response.js";
 
 export async function setSchema(req, res, client) {
     const { schema_id, schema_body } = req.body;
     try {
-        let status = 200;
-        let msg = "";
-
         let reply = await existSchemaDAL(client, schema_id);
         if(reply) {
-            msg = "Schema already set."
-            res.status(status);
-            res.send(msg);
+            sendResponse(res, 200, "Schema already set.");
             return;
         }
 
@@ -21,20 +17,16 @@ export async function setSchema(req, res, client) {
         });
 
         if(tree.isEmpty()) {
-            msg = "Invalid schema format."
-            res.status(status);
-            res.send(msg);
+            sendResponse(res, 200, "Invalid schema format.");
             return;
         }
         
         let success = await setSchemaDAL(client, schema_id, JSON.stringify(tree));
         if(success) {
-            msg = "Schema successfully set.";
+            sendResponse(res, 200, "Schema successfully set.");
         } else {
-            console.log("setSchema error: setSchemaDal failed.");
+            sendResponse(res, 500, "Internal server error.");
         }
-        res.status(status);
-        res.send(msg);
     } catch(err) {
         console.log(err);
     }
@@ -43,14 +35,9 @@ export async function setSchema(req, res, client) {
 export async function updateSchema(req, res, client) {
     const { schema_id, schema_body } = req.body;
     try {
-        let status = 200;
-        let msg = "";
-        
-        let reply = await existSchemaDAL(client, config_id);
+        let reply = await existSchemaDAL(client, schema_id);
         if(!reply) {
-            msg = "Schema with that id does not exist."
-            res.status(status);
-            res.send(msg);
+            sendResponse(res, 200, "Schema with that id does not exist.");
             return;
         }
         
@@ -60,20 +47,16 @@ export async function updateSchema(req, res, client) {
         });
 
         if(tree.isEmpty()) {
-            msg = "Invalid schema format."
-            res.status(status);
-            res.send(msg);
+            sendResponse(res, 200, "Invalid schema format.");
             return;
         }
 
         let success = await setSchemaDAL(client, schema_id, JSON.stringify(tree));
         if(success) {
-            msg = "Schema successfully updated.";
+            sendResponse(res, 200, "Schema successfully updated.");
         } else {
-            console.log("setSchema error: updateSchemaDal failed.");
+            sendResponse(res, 500, "Internal server error.");
         }
-        res.status(status);
-        res.send(msg);
     } catch(err) {
         console.log(err);
     }
@@ -81,16 +64,14 @@ export async function updateSchema(req, res, client) {
 
 export async function getSchema(req, res, client, logs) {
     const { schema_id } = req.body;
+    let msg = JSON.stringify({});
     try {
-        let status = 200;
-        let msg = JSON.stringify({});
         let { success, reply } = await getSchemaDAL(client, schema_id);
         if(success) {
             msg = reply;
         }
         logs.push(msg);
-        res.status(status);
-        res.send(msg);
+        sendResponse(res, 200, msg);
     } catch(err) {
         console.log(err);
     }
@@ -99,16 +80,12 @@ export async function getSchema(req, res, client, logs) {
 export async function delSchema(req, res, client) {
     const { schema_id } = req.body;
     try{
-        let status = 200;
-        let msg = "";
         let success = await delSchemaDAL(client, schema_id);
         if(success) { 
-            msg = "Schema successfully deleted.";
+            sendResponse(res, 200, "Schema successfully deleted.");
         } else {
-            msg = "Unable to delete - schema with that id does not exist.";
+            sendResponse(res, 200, "Unable to delete - schema with that id does not exist.");
         }
-        res.status(status);
-        res.send(msg);
     } catch(err) {
         console.log(err);
     }

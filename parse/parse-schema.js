@@ -1,4 +1,13 @@
 import { objectType, undefType } from "../constant/types.js";
+import { getSchemaDAL } from "../dal/schemaDAL.js";
+
+export async function checkSchema(client, schemaID, configData) {
+    let { success, reply } = await getSchemaDAL(client, schemaID);
+    if(!success) {
+        return false;
+    }
+    return validateConfig(JSON.parse(JSON.parse(reply)), configData);
+}
 
 export function validateConfig(schemaTree, configData) {
     return validateHelper(schemaTree.root, configData);
@@ -9,7 +18,6 @@ function validateHelper(schemaNode, configNode) {
     const schemaType = schemaData.type;
 
     if(!schemaNode.ignore) {
-        console.log(1);
         if(schemaData.is_array) {
             if(!Array.isArray(configNode)) {
                 return false;
@@ -24,18 +32,15 @@ function validateHelper(schemaNode, configNode) {
             return true;
         } 
         
-        console.log(2);
         if(Array.isArray(configNode)) {
             return false;
         }
 
-        console.log(3);
         if(typeof configNode !== schemaType) {
             return false;
         }
     }
 
-    console.log(4);
     let res = true;
     if(typeof configNode === objectType) {
         
