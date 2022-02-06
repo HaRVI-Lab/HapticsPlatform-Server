@@ -81,7 +81,6 @@ export async function updateConfig(req, res, client) {
         if(success) {
             sendResponse(res, 200, "Configuration successfully updated.");
         } else {
-            console.log("setConfig error: updateConfigDal failed.");
             sendResponse(res, 500, "Internal server error.");
         }
     } catch(err) {

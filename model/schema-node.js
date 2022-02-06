@@ -94,7 +94,6 @@ function buildNode(node) {
     if(res["type"] !== objectType) {
         res.children = [];
     }
-    // console.log(res.children);
     return [true, res];
 }
 

@@ -3,6 +3,7 @@ import redis from "redis";
 import sinon from "sinon";
 import { mockRequest, mockResponse } from 'mock-req-res';
 import { setConfigDAL, getConfigDAL, delConfigDAL, existConfigDAL } from "../dal/configDAL.js";
+import { setSchemaDAL, getSchemaDAL, delSchemaDAL, existSchemaDAL } from "../dal/schemaDAL.js";
 import { setConfig, getConfig, delConfig, updateConfig } from "../requests/configRequests.js";
 import { schemaNode } from "../model/schema-node.js";
 import { schemaTree } from "../model/schema-tree.js";
@@ -37,10 +38,6 @@ function fakeDel(config_id) {
 
 function fakeExist(config_id) {
     return db.has(config_id) ? 1 : 0;
-}
-
-function fakeSend(msg) {
-    return msg;
 }
 
 describe('Server Unit Tests', function() {
@@ -91,6 +88,58 @@ describe('Server Unit Tests', function() {
             });
             db.set(config_id, dataStr);
             let reply = await existConfigDAL(client, config_id);
+            assert.equal(reply, true);
+        });
+
+        
+        let schemaDALTestData = {
+            "name": "f1",
+            "type": "object",
+            "optional": true,
+            "is_array": false,
+            "children": [
+                {
+                    "name": "f1",
+                    "type": "object",
+                    "children": [{
+                        "name": "f1",
+                        "type": "object",
+                    }],
+                },
+                {
+                    "name": "f2",
+                    "type": "number",
+                }
+            ]
+        };
+
+        it('setSchemaDAL', async () => {
+            let schema_id = "mock_id1";
+            await setSchemaDAL(client, schema_id, schemaDALTestData);
+            assert.equal(db.get(schema_id), JSON.stringify(schemaDALTestData));
+        });
+
+        it('getSchemaDAL', async () => {
+            let schema_id = "mock_id1";
+            let dataStr = JSON.stringify(schemaDALTestData);
+            db.set(schema_id, dataStr);
+            let { _, reply } = await getSchemaDAL(client, schema_id);
+            assert.equal(reply, dataStr);
+        });
+
+        it('delSchemaDAL', async () => {
+            let schema_id = "mock_id1";
+            let data = schemaDALTestData;
+            db.set(schema_id, JSON.stringify(data));
+            await delSchemaDAL(client, schema_id);
+            assert.equal(db.size, 0);
+        });
+
+        it('existConfigDAL', async () => {
+            let schema_id = "mock_id1";
+            let dataStr = JSON.stringify(schemaDALTestData);
+            db.set(schema_id, dataStr);
+            let reply = await existSchemaDAL(client, schema_id);
             assert.equal(reply, true);
         });
     });
