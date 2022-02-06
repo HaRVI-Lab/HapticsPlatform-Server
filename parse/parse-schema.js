@@ -1,34 +1,41 @@
 import { objectType, undefType } from "../constant/types.js";
 
-function validateConfig(schemaTree, configData) {
+export function validateConfig(schemaTree, configData) {
     return validateHelper(schemaTree.root, configData);
 }
 
 function validateHelper(schemaNode, configNode) {
     const schemaData = schemaNode.data;
     const schemaType = schemaData.type;
-    if(currData.is_array) {
-        if(!Array.isArray(configNode)) {
+
+    if(!schemaNode.ignore) {
+        console.log(1);
+        if(schemaData.is_array) {
+            if(!Array.isArray(configNode)) {
+                return false;
+            }
+
+            for(const val of configNode) {
+                if(typeof val !== schemaType) {
+                    return false;
+                }
+            }
+
+            return true;
+        } 
+        
+        console.log(2);
+        if(Array.isArray(configNode)) {
             return false;
         }
 
-        for(const val of configNode) {
-            if(typeof val !== schemaType) {
-                return false;
-            }
+        console.log(3);
+        if(typeof configNode !== schemaType) {
+            return false;
         }
-
-        return true;
-    } 
-    
-    if(Array.isArray(configNode)) {
-        return false;
     }
 
-    if(typeof configNode !== schemaType) {
-        return false;
-    }
-
+    console.log(4);
     let res = true;
     if(typeof configNode === objectType) {
         

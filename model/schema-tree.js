@@ -11,10 +11,16 @@ export class schemaTree {
         }
         this.id = data.schema_id;
 
+        if(!Array.isArray(data.schema_body)) {
+            return;
+        }
+
         let nameSet = new Set();
         for(const child of data.schema_body) {
             let node = new schemaNode(child);
             if(node.isEmpty() || nameSet.has(node.data.name)) {
+                console.log("empty: " + node.isEmpty());
+                console.log("repetitive name: " + nameSet.has(node.data.name));
                 this.root.data.children = [];
                 return;
             }

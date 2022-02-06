@@ -6,6 +6,7 @@ import { setConfigDAL, getConfigDAL, delConfigDAL, existConfigDAL } from "../dal
 import { setConfig, getConfig, delConfig, updateConfig } from "../requests.js";
 import { schemaNode } from "../model/schema-node.js";
 import { schemaTree } from "../model/schema-tree.js";
+import { validateConfig } from "../parse/parse-schema.js";
 
 let db = new Map();
 let client = redis.createClient();
@@ -92,264 +93,291 @@ describe('Server Unit Tests', function() {
             let reply = await existConfigDAL(client, config_id);
             assert.equal(reply, true);
         });
+    });
+
+    describe('Requests', async () => {
+        this.beforeEach(() => {
+            req = mockRequest();
+            res = mockResponse();
         });
 
-        describe('Requests', async () => {
-            this.beforeEach(() => {
-                req = mockRequest();
-                res = mockResponse();
-            });
+        it('setConfig - success', async () => {
+            let configID = "mock_id1";
+            let configBody = {
+                f1: "foo",
+                f2: "bar",
+            };
 
-            it('setConfig - success', async () => {
-                let configID = "mock_id1";
-                let configBody = {
-                    f1: "foo",
-                    f2: "bar",
-                };
+            req.body = {
+                "config_id": configID,
+                "config_body": configBody,
+            };
 
-                req.body = {
-                    "config_id": configID,
-                    "config_body": configBody,
-                };
+            await setConfig(req, res, client);
+            assert.equal(db.get(configID), JSON.stringify(configBody));
+        });
+        
+        it('setConfig - fail', async () => {
+            let configID = "mock_id1";
+            let configBody = {
+                f1: "foo",
+                f2: "bar",
+            };
+            db.set(configID, JSON.stringify(configBody));
 
-                await setConfig(req, res, client);
-                assert.equal(db.get(configID), JSON.stringify(configBody));
-            });
-            
-            it('setConfig - fail', async () => {
-                let configID = "mock_id1";
-                let configBody = {
-                    f1: "foo",
-                    f2: "bar",
-                };
-                db.set(configID, JSON.stringify(configBody));
-
-                req.body = {
-                    "config_id": configID,
-                    "config_body": {
-                        f1: "fo",
-                        f2: "ba",
-                    },
-                };
-
-                await setConfig(req, res, client);
-                assert.equal(db.get(configID), JSON.stringify(configBody));
-            });
-
-            it('getConfig - valid', async () => {
-                let configID = "mock_id1";
-                let configBody = {
-                    f1: "foo",
-                    f2: "bar",
-                };
-                db.set(configID, JSON.stringify(configBody));
-
-                req.body = {
-                    "config_id": configID,
-                };
-
-                let logs = [];
-                await getConfig(req, res, client, logs);
-                assert.equal(logs.length, 1);
-                assert.equal(logs[0], JSON.stringify(configBody));
-            });
-
-            it('getConfig - empty', async () => {
-                req.body = {
-                    "config_id": "mock_id1",
-                };
-
-                let logs = [];
-                await getConfig(req, res, client, logs);
-                assert.equal(logs.length, 1);
-                assert.equal(logs[0], JSON.stringify({}));
-            });
-
-            it('delConfig - success', async () => {
-                let configID = "mock_id1";
-                let configBody = {
-                    f1: "foo",
-                    f2: "bar",
-                };
-                db.set(configID, JSON.stringify(configBody));
-
-                req.body = {
-                    "config_id": configID,
-                };
-
-                await delConfig(req, res, client);
-                assert.equal(db.size, 0);
-            });
-
-            it('delConfig - fail', async () => {
-                let configID = "mock_id1";
-                let configBody = {
-                    f1: "foo",
-                    f2: "bar",
-                };
-                db.set(configID, JSON.stringify(configBody));
-
-                req.body = {
-                    "config_id": "mock_id2",
-                };
-
-                await delConfig(req, res, client);
-                assert.equal(db.size, 1);
-            });
-
-            it('updateConfig - success', async () => {
-                let configID = "mock_id1";
-                db.set(configID, JSON.stringify({
-                    f1: "foo",
-                    f2: "bar",
-                }));
-
-                let updateBody = {
+            req.body = {
+                "config_id": configID,
+                "config_body": {
                     f1: "fo",
                     f2: "ba",
-                }
-                req.body = {
-                    "config_id": configID,
-                    "config_body": updateBody,
-                };
+                },
+            };
 
-                await updateConfig(req, res, client);
-                assert.equal(db.get(configID), JSON.stringify(updateBody));
-            });
+            await setConfig(req, res, client);
+            assert.equal(db.get(configID), JSON.stringify(configBody));
+        });
 
-            it('updateConfig - fail', async () => {
-                let configID = "mock_id1";
-                let configBody = {
-                    f1: "foo",
-                    f2: "bar",
-                };
-                db.set(configID, JSON.stringify(configBody));
+        it('getConfig - valid', async () => {
+            let configID = "mock_id1";
+            let configBody = {
+                f1: "foo",
+                f2: "bar",
+            };
+            db.set(configID, JSON.stringify(configBody));
 
-                req.body = {
-                    "config_id": "mock_id2",
-                    "config_body": {
-                        f1: "fo",
-                        f2: "ba",
+            req.body = {
+                "config_id": configID,
+            };
+
+            let logs = [];
+            await getConfig(req, res, client, logs);
+            assert.equal(logs.length, 1);
+            assert.equal(logs[0], JSON.stringify(configBody));
+        });
+
+        it('getConfig - empty', async () => {
+            req.body = {
+                "config_id": "mock_id1",
+            };
+
+            let logs = [];
+            await getConfig(req, res, client, logs);
+            assert.equal(logs.length, 1);
+            assert.equal(logs[0], JSON.stringify({}));
+        });
+
+        it('delConfig - success', async () => {
+            let configID = "mock_id1";
+            let configBody = {
+                f1: "foo",
+                f2: "bar",
+            };
+            db.set(configID, JSON.stringify(configBody));
+
+            req.body = {
+                "config_id": configID,
+            };
+
+            await delConfig(req, res, client);
+            assert.equal(db.size, 0);
+        });
+
+        it('delConfig - fail', async () => {
+            let configID = "mock_id1";
+            let configBody = {
+                f1: "foo",
+                f2: "bar",
+            };
+            db.set(configID, JSON.stringify(configBody));
+
+            req.body = {
+                "config_id": "mock_id2",
+            };
+
+            await delConfig(req, res, client);
+            assert.equal(db.size, 1);
+        });
+
+        it('updateConfig - success', async () => {
+            let configID = "mock_id1";
+            db.set(configID, JSON.stringify({
+                f1: "foo",
+                f2: "bar",
+            }));
+
+            let updateBody = {
+                f1: "fo",
+                f2: "ba",
+            }
+            req.body = {
+                "config_id": configID,
+                "config_body": updateBody,
+            };
+
+            await updateConfig(req, res, client);
+            assert.equal(db.get(configID), JSON.stringify(updateBody));
+        });
+
+        it('updateConfig - fail', async () => {
+            let configID = "mock_id1";
+            let configBody = {
+                f1: "foo",
+                f2: "bar",
+            };
+            db.set(configID, JSON.stringify(configBody));
+
+            req.body = {
+                "config_id": "mock_id2",
+                "config_body": {
+                    f1: "fo",
+                    f2: "ba",
+                },
+            };
+
+            await updateConfig(req, res, client);
+            assert.equal(db.get(configID), JSON.stringify(configBody));
+        });
+
+        it('schema-node-test1', async () => {
+            const nodeData = {
+                "a": 1,
+            }
+
+            const node = new schemaNode(nodeData);
+            assert.equal(node.isEmpty(), true);
+        });
+
+        it('schema-node-test2', async () => {
+            const nodeData = {
+                "name": "abc",
+                "type": "object",
+                "optional": true,
+                "is_array": false,
+                "ff": "as",
+                "vv": 1,
+                "c": false,
+                "children": [
+                    {
+                        "name": "abc",
+                        "type": "string",
                     },
-                };
+                    {
+                        "name": "ab",
+                        "type": "string",
+                    },
+                ],
+            }
 
-                await updateConfig(req, res, client);
-                assert.equal(db.get(configID), JSON.stringify(configBody));
-            });
+            const node = new schemaNode(nodeData);
+            console.log(node);
+            assert.equal(node.isEmpty(), false);
+        });
 
-            it('schema-node-test1', async () => {
-                const nodeData = {
-                    "a": 1,
+        it('schema-tree-test1', async () => {
+            const nodeData = {
+                "name": "abc",
+                "type": "string",
+                "optional": true,
+                "is_array": false,
+                "ff": "as",
+                "vv": 1,
+                "c": false,
+                "children": [
+                    {
+                        "name": "abc",
+                        "type": "string",
+                    },
+                    {
+                        "name": "ab",
+                        "type": "string",
+                    },
+                ],
+            }
+            
+            const treeData = {
+                "schema_id": "asd",
+                "schema_body": [
+                    {
+                        "name": "abc",
+                        "type": "string",
+                    },
+                    {
+                        "name": "ab",
+                        "type": "string",
+                    }
+                ],
+            }
+
+            const tree = new schemaTree(treeData);
+            console.log(tree);
+            assert.equal(tree.isEmpty(), false);
+        });
+
+        it('schema-validate-test1', async () => {
+            const nodeData1 = {
+                "name": "abc",
+                "type": "object",
+                "optional": true,
+                "is_array": false,
+                "children": [
+                    {
+                        "name": "abc",
+                        "type": "string",
+                    },
+                    {
+                        "name": "ab",
+                        "type": "string",
+                    },
+                ],
+            };
+
+            const nodeData2 = {
+                "name": "ab",
+                "type": "object",
+                "optional": false,
+                "is_array": false,
+                "children": [
+                    {
+                        "name": "abc",
+                        "type": "string",
+                    },
+                    {
+                        "name": "ab",
+                        "type": "string",
+                    },
+                ],
+            };
+
+            const nodeData3 = {
+                "name": "abe",
+                "type": "string",
+            };
+            
+            const treeData = {
+                "schema_id": "asd",
+                "schema_body": [
+                    nodeData1,
+                    nodeData2,
+                    nodeData3,
+                ],
+            }
+
+            const configData = {
+                "abe": "bob",
+                "ab": {
+                    "abc": "def",
+                    "ab": "fgh"
+                },
+                "abc": {
+                    "abc": "def",
+                    "ab": "fgh"
                 }
+            }
 
-                const node = new schemaNode(nodeData);
-                assert.equal(node.isEmpty(), true);
-            });
-
-            it('schema-node-test2', async () => {
-                const nodeData = {
-                    "name": "abc",
-                    "type": "object",
-                    "optional": true,
-                    "is_array": false,
-                    "ff": "as",
-                    "vv": 1,
-                    "c": false,
-                    "children": [
-                        {
-                            "name": "abc",
-                            "type": "string",
-                        },
-                        {
-                            "name": "ab",
-                            "type": "string",
-                        },
-                    ],
-                }
-
-                const node = new schemaNode(nodeData);
-                console.log(node);
-                assert.equal(node.isEmpty(), false);
-            });
-
-            it('schema-tree-test1', async () => {
-                const nodeData = {
-                    "name": "abc",
-                    "type": "string",
-                    "optional": true,
-                    "is_array": false,
-                    "ff": "as",
-                    "vv": 1,
-                    "c": false,
-                    "children": [
-                        {
-                            "name": "abc",
-                            "type": "string",
-                        },
-                        {
-                            "name": "ab",
-                            "type": "string",
-                        },
-                    ],
-                }
-                
-                const treeData = {
-                    "schema_id": "asd",
-                    "schema_body": [
-                        {
-                            "name": "abc",
-                            "type": "string",
-                        },
-                        {
-                            "name": "ab",
-                            "type": "string",
-                        }
-                    ],
-                }
-
-                const tree = new schemaTree(treeData);
-                console.log(tree);
-                assert.equal(tree.isEmpty(), false);
-            });
-
-            it('schema-validate-test1', async () => {
-                const nodeData = {
-                    "name": "abc",
-                    "type": "string",
-                    "optional": true,
-                    "is_array": false,
-                    "ff": "as",
-                    "vv": 1,
-                    "c": false,
-                    "children": [
-                        {
-                            "name": "abc",
-                            "type": "string",
-                        },
-                        {
-                            "name": "ab",
-                            "type": "string",
-                        },
-                    ],
-                }
-                
-                const treeData = {
-                    "schema_id": "asd",
-                    "schema_body": [
-                        {
-                            "name": "abc",
-                            "type": "string",
-                        },
-                        {
-                            "name": "ab",
-                            "type": "string",
-                        }
-                    ],
-                }
-
-                const tree = new schemaTree(treeData);
-                console.log(tree);
-                assert.equal(tree.isEmpty(), false);
-            });
+            const tree = new schemaTree(treeData);
+            console.log(tree);
+            console.log(validateConfig(tree, configData));
+            assert.equal(tree.isEmpty(), false);
+        });
     });
 });
