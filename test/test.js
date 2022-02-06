@@ -46,53 +46,40 @@ describe('Server Unit Tests', function() {
     });
 
     describe('DAL Functions', async () => {
+        const config_id = "mock_id1";
+        const configData = {
+            f1: "foo",
+            f2: "bar",
+        };
+
         it('setConfigDAL', async () => {
-            let config_id = "mock_id1";
-            let data = {
-                f1: "foo",
-                f2: "bar",
-            };
-            await setConfigDAL(client, config_id, data);
-            assert.equal(db.get(config_id), JSON.stringify(data));
+            await setConfigDAL(client, config_id, configData);
+            assert.equal(db.get(config_id), JSON.stringify(configData));
         });
 
         it('getConfigDAL', async () => {
-            let config_id = "mock_id1";
-            let dataStr = JSON.stringify({
-                f1: "foo",
-                f2: "bar",
-            });
+            const dataStr = JSON.stringify(configData);
             db.set(config_id, dataStr);
-
-            let { _, reply } = await getConfigDAL(client, config_id);
+            const { _, reply } = await getConfigDAL(client, config_id);
             assert.equal(reply, dataStr);
         });
 
         it('delConfigDAL', async () => {
-            let config_id = "mock_id1";
-            let data = {
-                f1: "foo",
-                f2: "bar",
-            };
-            db.set(config_id, JSON.stringify(data));
-
+            db.set(config_id, JSON.stringify(configData));
             await delConfigDAL(client, config_id);
             assert.equal(db.size, 0);
         });
 
         it('existConfigDAL', async () => {
-            let config_id = "mock_id1";
-            let dataStr = JSON.stringify({
-                f1: "foo",
-                f2: "bar",
-            });
+            const dataStr = JSON.stringify(configData);
             db.set(config_id, dataStr);
-            let reply = await existConfigDAL(client, config_id);
+            const reply = await existConfigDAL(client, config_id);
             assert.equal(reply, true);
         });
 
         
-        let schemaDALTestData = {
+        const schema_id = "mock_id1";
+        const schemaDALTestData = {
             "name": "f1",
             "type": "object",
             "optional": true,
@@ -114,32 +101,28 @@ describe('Server Unit Tests', function() {
         };
 
         it('setSchemaDAL', async () => {
-            let schema_id = "mock_id1";
             await setSchemaDAL(client, schema_id, schemaDALTestData);
             assert.equal(db.get(schema_id), JSON.stringify(schemaDALTestData));
         });
 
         it('getSchemaDAL', async () => {
-            let schema_id = "mock_id1";
-            let dataStr = JSON.stringify(schemaDALTestData);
+            const dataStr = JSON.stringify(schemaDALTestData);
             db.set(schema_id, dataStr);
-            let { _, reply } = await getSchemaDAL(client, schema_id);
+            const { _, reply } = await getSchemaDAL(client, schema_id);
             assert.equal(reply, dataStr);
         });
 
         it('delSchemaDAL', async () => {
-            let schema_id = "mock_id1";
-            let data = schemaDALTestData;
+            const data = schemaDALTestData;
             db.set(schema_id, JSON.stringify(data));
             await delSchemaDAL(client, schema_id);
             assert.equal(db.size, 0);
         });
 
         it('existConfigDAL', async () => {
-            let schema_id = "mock_id1";
-            let dataStr = JSON.stringify(schemaDALTestData);
+            const dataStr = JSON.stringify(schemaDALTestData);
             db.set(schema_id, dataStr);
-            let reply = await existSchemaDAL(client, schema_id);
+            const reply = await existSchemaDAL(client, schema_id);
             assert.equal(reply, true);
         });
     });
