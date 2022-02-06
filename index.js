@@ -4,7 +4,7 @@
 
 import express, { application } from "express";
 import redis from "redis";
-import { setConfig, getConfig, delConfig, updateConfig } from "./requests.js";
+import { setConfig, getConfig, delConfig, updateConfig } from "./requests/requests.js";
 
 const PORT = process.env.PORT || 5000;
 

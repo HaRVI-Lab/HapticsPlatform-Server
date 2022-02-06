@@ -1,4 +1,4 @@
-import { setConfigDAL, getConfigDAL, delConfigDAL, existConfigDAL } from "./dal.js";
+import { setConfigDAL, getConfigDAL, delConfigDAL, existConfigDAL } from "../dal/configDAL.js";
 
 export async function setConfig(req, res, client) {
     const { config_id, config_body } = req.body;
