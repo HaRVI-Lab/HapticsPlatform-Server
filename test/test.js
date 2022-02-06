@@ -13,10 +13,10 @@ let db = new Map();
 let client = redis.createClient();
 let req = mockRequest();
 let res = mockResponse();
-let setMock = sinon.stub(client, "set").callsFake(fakeSet);
-let getMock = sinon.stub(client, "get").callsFake(fakeGet);
-let delMock = sinon.stub(client, "del").callsFake(fakeDel);
-let existMock = sinon.stub(client, "exists").callsFake(fakeExist);
+sinon.stub(client, "set").callsFake(fakeSet);
+sinon.stub(client, "get").callsFake(fakeGet);
+sinon.stub(client, "del").callsFake(fakeDel);
+sinon.stub(client, "exists").callsFake(fakeExist);
 
 
 function fakeSet(config_id, data) {
