@@ -1,10 +1,21 @@
 import { setConfigDAL, getConfigDAL, delConfigDAL, existConfigDAL } from "../dal/configDAL.js";
 import { checkSchema } from "../parse/parse-schema.js";
-import { stringType, booleanType } from "../constant/types.js";
+import { stringType, booleanType, objectType } from "../constant/types.js";
 import { sendResponse } from "../util/response.js";
+import { jsonStringifyValidate } from "../util/jsonChecks.js";
 
 export async function setConfig(req, res, client) {
     const { config_id, config_body, require_schema, schema_id } = req.body;
+    if(typeof config_id !== stringType) {
+        sendResponse(res, 200, "Config ID must be string.");
+    }
+
+    if(typeof config_body !== objectType) {
+        sendResponse(res, 200, "Config body not a valid JSON.");
+    }
+
+    console.log(typeof config_body);
+
     try {
         let reply = await existConfigDAL(client, config_id);
         if(reply) {
@@ -38,6 +49,13 @@ export async function setConfig(req, res, client) {
 
 export async function updateConfig(req, res, client) {
     const { config_id, config_body, require_schema, schema_id } = req.body;
+    if(typeof config_id !== stringType) {
+        sendResponse(res, 200, "Config ID must be string.");
+    }
+    if(typeof config_body !== objectType) {
+        sendResponse(res, 200, "Config body not a valid JSON.");
+    }
+
     try {
         let reply = await existConfigDAL(client, config_id);
         if(!reply) {
@@ -72,6 +90,9 @@ export async function updateConfig(req, res, client) {
 
 export async function getConfig(req, res, client, logs) {
     const { config_id } = req.body;
+    if(typeof config_id !== stringType) {
+        sendResponse(res, 200, "Config ID must be string.");
+    }
     let msg = JSON.stringify({});
     try {
         let { success, reply } = await getConfigDAL(client, config_id);
@@ -87,6 +108,9 @@ export async function getConfig(req, res, client, logs) {
 
 export async function delConfig(req, res, client) {
     const { config_id } = req.body;
+    if(typeof config_id !== stringType) {
+        sendResponse(res, 200, "Config ID must be string.");
+    }
     try{
         let success = await delConfigDAL(client, config_id);
         if(success) { 

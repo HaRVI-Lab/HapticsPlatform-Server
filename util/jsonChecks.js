@@ -1,8 +1,17 @@
-export function jsonValidate(dataStr) {
+export function jsonParseValidate(dataStr) {
     try {
-        let data = JSON.parse(dataStr);
-        return [true, data];
+        JSON.parse(dataStr);
+        return true;
     } catch(e) {
-        return [false, {}];
+        return false;
+    }
+}
+
+export function jsonStringifyValidate(data) {
+    try {
+        JSON.stringify(data);
+        return true;
+    } catch(e) {
+        return false;
     }
 }
