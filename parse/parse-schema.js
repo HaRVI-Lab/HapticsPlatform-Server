@@ -6,6 +6,7 @@ export async function checkSchema(client, schemaID, configData) {
     if(!success) {
         return false;
     }
+    //parse twice because reply might be over-stringified
     return validateConfig(JSON.parse(JSON.parse(reply)), configData);
 }
 
