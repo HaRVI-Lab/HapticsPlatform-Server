@@ -3,7 +3,7 @@ import redis from "redis";
 import sinon from "sinon";
 import { mockRequest, mockResponse } from 'mock-req-res';
 import { setConfigDAL, getConfigDAL, delConfigDAL, existConfigDAL } from "../dal/configDAL.js";
-import { setConfig, getConfig, delConfig, updateConfig } from "../requests/requests.js";
+import { setConfig, getConfig, delConfig, updateConfig } from "../requests/configRequests.js";
 import { schemaNode } from "../model/schema-node.js";
 import { schemaTree } from "../model/schema-tree.js";
 import { validateConfig } from "../parse/parse-schema.js";

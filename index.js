@@ -4,7 +4,8 @@
 
 import express, { application } from "express";
 import redis from "redis";
-import { setConfig, getConfig, delConfig, updateConfig } from "./requests/requests.js";
+import { setConfig, getConfig, delConfig, updateConfig } from "./requests/configRequests.js";
+import { setSchema, getSchema, delSchema, updateSchema } from "./requests/schemaRequests.js";
 
 const PORT = process.env.PORT || 5000;
 
@@ -28,11 +29,17 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get('/config/getConfig', getHandle);
+app.get('/config/getConfig', getConfigHandle);
 
-app.post('/config/setConfig', setHandle);
-app.post('/config/delConfig', delHandle);
-app.post('/config/updateConfig', updateHandle);
+app.post('/config/setConfig', setConfigHandle);
+app.post('/config/delConfig', delConfigHandle);
+app.post('/config/updateConfig', updateConfigHandle);
+
+app.get('/schema/getSchema', getSchemaHandle);
+
+app.post('/schema/setSchema', setSchemaHandle);
+app.post('/schema/delSchema', delSchemaHandle);
+app.post('/schema/updateSchema', updateSchemaHandle);
 
 app.listen(PORT, () => {
     console.log(`Server listening on ${PORT}`);
@@ -40,18 +47,34 @@ app.listen(PORT, () => {
 
 
 
-async function setHandle(req, res, next) {
+async function setConfigHandle(req, res, next) {
     setConfig(req, res, client);
 }
 
-async function getHandle(req, res, next) {
+async function getConfigHandle(req, res, next) {
     getConfig(req, res, client, []);
 }
 
-async function delHandle(req, res, next) {
+async function delConfigHandle(req, res, next) {
     delConfig(req, res, client);
 }
 
-async function updateHandle(req, res, next) {
+async function updateConfigHandle(req, res, next) {
     updateConfig(req, res, client);
+}
+
+async function setSchemaHandle(req, res, next) {
+    setSchema(req, res, client);
+}
+
+async function getSchemaHandle(req, res, next) {
+    getSchema(req, res, client, []);
+}
+
+async function delSchemaHandle(req, res, next) {
+    delSchema(req, res, client);
+}
+
+async function updateSchemaHandle(req, res, next) {
+    updateSchema(req, res, client);
 }

@@ -1,5 +1,5 @@
 import { schemaNode } from "./schema-node.js";
-import { stringType, undefType } from "../constant/types.js";
+import { stringType } from "../constant/types.js";
 
 export class schemaTree {
     constructor(data) {
@@ -19,8 +19,6 @@ export class schemaTree {
         for(const child of data.schema_body) {
             let node = new schemaNode(child);
             if(node.isEmpty() || nameSet.has(node.data.name)) {
-                console.log("empty: " + node.isEmpty());
-                console.log("repetitive name: " + nameSet.has(node.data.name));
                 this.root.data.children = [];
                 return;
             }
