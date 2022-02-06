@@ -4,6 +4,8 @@ import sinon from "sinon";
 import { mockRequest, mockResponse } from 'mock-req-res';
 import { setConfigDAL, getConfigDAL, delConfigDAL, existConfigDAL } from "../dal.js";
 import { setConfig, getConfig, delConfig, updateConfig } from "../requests.js";
+import { schemaNode } from "../model/schema-node.js";
+import { schemaTree } from "../model/schema-tree.js";
 
 let db = new Map();
 let client = redis.createClient();
@@ -233,6 +235,121 @@ describe('Server Unit Tests', function() {
 
                 await updateConfig(req, res, client);
                 assert.equal(db.get(configID), JSON.stringify(configBody));
+            });
+
+            it('schema-node-test1', async () => {
+                const nodeData = {
+                    "a": 1,
+                }
+
+                const node = new schemaNode(nodeData);
+                assert.equal(node.isEmpty(), true);
+            });
+
+            it('schema-node-test2', async () => {
+                const nodeData = {
+                    "name": "abc",
+                    "type": "object",
+                    "optional": true,
+                    "is_array": false,
+                    "ff": "as",
+                    "vv": 1,
+                    "c": false,
+                    "children": [
+                        {
+                            "name": "abc",
+                            "type": "string",
+                        },
+                        {
+                            "name": "ab",
+                            "type": "string",
+                        },
+                    ],
+                }
+
+                const node = new schemaNode(nodeData);
+                console.log(node);
+                assert.equal(node.isEmpty(), false);
+            });
+
+            it('schema-tree-test1', async () => {
+                const nodeData = {
+                    "name": "abc",
+                    "type": "string",
+                    "optional": true,
+                    "is_array": false,
+                    "ff": "as",
+                    "vv": 1,
+                    "c": false,
+                    "children": [
+                        {
+                            "name": "abc",
+                            "type": "string",
+                        },
+                        {
+                            "name": "ab",
+                            "type": "string",
+                        },
+                    ],
+                }
+                
+                const treeData = {
+                    "schema_id": "asd",
+                    "schema_body": [
+                        {
+                            "name": "abc",
+                            "type": "string",
+                        },
+                        {
+                            "name": "ab",
+                            "type": "string",
+                        }
+                    ],
+                }
+
+                const tree = new schemaTree(treeData);
+                console.log(tree);
+                assert.equal(tree.isEmpty(), false);
+            });
+
+            it('schema-validate-test1', async () => {
+                const nodeData = {
+                    "name": "abc",
+                    "type": "string",
+                    "optional": true,
+                    "is_array": false,
+                    "ff": "as",
+                    "vv": 1,
+                    "c": false,
+                    "children": [
+                        {
+                            "name": "abc",
+                            "type": "string",
+                        },
+                        {
+                            "name": "ab",
+                            "type": "string",
+                        },
+                    ],
+                }
+                
+                const treeData = {
+                    "schema_id": "asd",
+                    "schema_body": [
+                        {
+                            "name": "abc",
+                            "type": "string",
+                        },
+                        {
+                            "name": "ab",
+                            "type": "string",
+                        }
+                    ],
+                }
+
+                const tree = new schemaTree(treeData);
+                console.log(tree);
+                assert.equal(tree.isEmpty(), false);
             });
     });
 });
