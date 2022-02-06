@@ -2,19 +2,18 @@ import { setConfigDAL, getConfigDAL, delConfigDAL, existConfigDAL } from "../dal
 import { checkSchema } from "../parse/parse-schema.js";
 import { stringType, booleanType, objectType } from "../constant/types.js";
 import { sendResponse } from "../util/response.js";
-import { jsonStringifyValidate } from "../util/jsonChecks.js";
 
 export async function setConfig(req, res, client) {
     const { config_id, config_body, require_schema, schema_id } = req.body;
     if(typeof config_id !== stringType) {
         sendResponse(res, 200, "Config ID must be string.");
+        return;
     }
 
     if(typeof config_body !== objectType) {
         sendResponse(res, 200, "Config body not a valid JSON.");
+        return;
     }
-
-    console.log(typeof config_body);
 
     try {
         let reply = await existConfigDAL(client, config_id);
@@ -51,9 +50,11 @@ export async function updateConfig(req, res, client) {
     const { config_id, config_body, require_schema, schema_id } = req.body;
     if(typeof config_id !== stringType) {
         sendResponse(res, 200, "Config ID must be string.");
+        return;
     }
     if(typeof config_body !== objectType) {
         sendResponse(res, 200, "Config body not a valid JSON.");
+        return;
     }
 
     try {
@@ -92,6 +93,7 @@ export async function getConfig(req, res, client, logs) {
     const { config_id } = req.body;
     if(typeof config_id !== stringType) {
         sendResponse(res, 200, "Config ID must be string.");
+        return;
     }
     let msg = JSON.stringify({});
     try {
@@ -110,6 +112,7 @@ export async function delConfig(req, res, client) {
     const { config_id } = req.body;
     if(typeof config_id !== stringType) {
         sendResponse(res, 200, "Config ID must be string.");
+        return;
     }
     try{
         let success = await delConfigDAL(client, config_id);
