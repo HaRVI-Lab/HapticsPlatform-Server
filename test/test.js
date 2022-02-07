@@ -6,6 +6,7 @@ import { setConfigDAL, getConfigDAL, delConfigDAL, existConfigDAL } from "../dal
 import { setSchemaDAL, getSchemaDAL, delSchemaDAL, existSchemaDAL } from "../dal/schemaDAL.js";
 import { setSurveyLinkDAL, getSurveyLinkDAL } from '../dal/surveyDAL.js';
 import { setConfig, getConfig, delConfig, updateConfig } from "../requests/configRequests.js";
+import { setSurvey, getSurvey } from '../requests/surveyRequests.js';
 import { schemaNode } from "../model/schema-node.js";
 import { schemaTree } from "../model/schema-tree.js";
 import { validateConfig } from "../parse/parse-schema.js";
@@ -140,7 +141,7 @@ describe('Server Unit Tests', function() {
 
         it('getSurvelyLinkDAL', async() => {
             db.set(survey_id, survey_link);
-            const { _, reply } = await getSchemaDAL(client, survey_id);
+            const { _, reply } = await getSurveyLinkDAL(client, survey_id);
             assert.equal(reply, survey_link);
         });
     });
@@ -428,6 +429,49 @@ describe('Server Unit Tests', function() {
             console.log(tree);
             console.log(validateConfig(tree, configData));
             assert.equal(tree.isEmpty(), false);
+        });
+    });
+
+    describe('Survey Requests', async () => {
+        this.beforeEach(() => {
+            req = mockRequest();
+            res = mockResponse();
+        });
+
+        const survey_id = "mock_survey_1";
+        const survey_link = "mock_link";
+
+        it("setSurvey", async () => {
+            req.body = {
+                "survey_id": survey_id,
+                "survey_link": survey_link,
+            }
+            await setSurvey(req, res, client);
+            assert.equal(db.get(survey_id), survey_link);
+        });
+
+        it("getSurvey - success", async () => {
+            req.body = {
+                "survey_id": survey_id,
+            }
+            db.set(survey_id, survey_link);
+
+            let logs = [];
+            await getSurvey(req, res, client, logs);
+            assert.equal(logs.length, 1);
+            assert.equal(logs[0], survey_link);
+        });
+
+        it("getSurvey - failure", async () => {
+            req.body = {
+                "survey_id": "false_id",
+            }
+            db.set(survey_id, survey_link);
+
+            let logs = [];
+            await getSurvey(req, res, client, logs);
+            assert.equal(logs.length, 1);
+            assert.equal(logs[0], "");
         });
     });
 });
