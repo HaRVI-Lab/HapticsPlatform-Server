@@ -6,6 +6,7 @@ import { setConfigDAL, getConfigDAL, delConfigDAL, existConfigDAL } from "../dal
 import { setSchemaDAL, getSchemaDAL, delSchemaDAL, existSchemaDAL } from "../dal/schemaDAL.js";
 import { setSurveyLinkDAL, getSurveyLinkDAL } from '../dal/surveyDAL.js';
 import { setConfig, getConfig, delConfig, updateConfig } from "../requests/configRequests.js";
+import { setSchema, getSchema, delSchema, updateSchema } from '../requests/schemaRequests.js';
 import { setSurvey, getSurvey } from '../requests/surveyRequests.js';
 import { schemaNode } from "../model/schema-node.js";
 import { schemaTree } from "../model/schema-tree.js";
@@ -430,6 +431,100 @@ describe('Server Unit Tests', function() {
             console.log(validateConfig(tree, configData));
             assert.equal(tree.isEmpty(), false);
         });
+    });
+
+    describe("Schema Requests", async() => {
+        const schema_id = "mock_id1";
+        const reqBody = {
+            "schema_id": schema_id,
+            "schema_body": [
+                {
+                    "name": "s1",
+                    "type": "string"
+                }
+            ],
+        };
+        const updateData = [
+            {
+                "name": "s1",
+                "type": "string"
+            }, 
+            {
+                "name": "s2",
+                "type": "number"
+            }
+        ]
+        const tree = new schemaTree(reqBody);
+
+        it('setSchema - success', async () => {
+            req.body = reqBody;
+            await setSchema(req, res, client);
+            assert.equal(db.get(schema_id), JSON.stringify(JSON.stringify(tree)));
+        });
+        
+        it('setSchema - fail', async () => {
+            db.set(schema_id, JSON.stringify(tree));
+            req.body = reqBody;
+            await setSchema(req, res, client);
+            assert.equal(db.get(schema_id), JSON.stringify(tree));
+        });
+
+        it('getSchema - valid', async () => {
+            db.set(schema_id, JSON.stringify(tree));
+            req.body = {
+                "schema_id": schema_id,
+            };
+            let logs = [];
+            await getSchema(req, res, client, logs);
+            assert.equal(logs.length, 1);
+            assert.equal(logs[0], JSON.stringify(tree));
+        });
+
+        it('getSchema - empty', async () => {
+            req.body = {
+                "schema_id": "non-ex",
+            };
+            let logs = [];
+            await getSchema(req, res, client, logs);
+            assert.equal(logs.length, 1);
+            assert.equal(logs[0], JSON.stringify({}));
+        });
+
+        it('delSchema - success', async () => {
+            db.set(schema_id, JSON.stringify(reqBody));
+            req.body = {
+                "schema_id": schema_id,
+            };
+            await delSchema(req, res, client);
+            assert.equal(db.size, 0);
+        });
+
+        it('delSchema - fail', async () => {
+            db.set(schema_id, JSON.stringify(tree));
+            req.body = {
+                "schema_id": "non-ex",
+            };
+            await delSchema(req, res, client);
+            assert.equal(db.size, 1);
+        });
+
+        it('updateSchema - success', async () => {
+            db.set(schema_id, JSON.stringify(tree));
+            req.body["schema_id"] = schema_id;
+            req.body["schema_body"] = updateData;
+            const tree2 = new schemaTree(req.body);
+            await updateSchema(req, res, client);
+            assert.equal(db.get(schema_id), JSON.stringify(JSON.stringify(tree2)));
+        });
+
+        it('updateConfig - fail', async () => {
+            db.set(schema_id, JSON.stringify(tree));
+            req.body["schema_id"] = "non-ex";
+            req.body["schema_body"] = updateData;
+            await updateSchema(req, res, client);
+            assert.equal(db.get(schema_id), JSON.stringify(tree));
+        });
+
     });
 
     describe('Survey Requests', async () => {
