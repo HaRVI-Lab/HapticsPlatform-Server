@@ -10,7 +10,7 @@ import { setSchema, getSchema, delSchema, updateSchema } from '../requests/schem
 import { setSurvey, getSurvey } from '../requests/surveyRequests.js';
 import { schemaNode } from "../model/schema-node.js";
 import { schemaTree } from "../model/schema-tree.js";
-import { validateConfig } from "../parse/parse-schema.js";
+import { checkSchema, validateConfig } from "../parse/parse-schema.js";
 
 let db = new Map();
 let client = redis.createClient();
@@ -329,73 +329,6 @@ describe('Server Unit Tests', function() {
             console.log(tree);
             assert.equal(tree.isEmpty(), false);
         });
-
-        it('schema-validate-test1', async () => {
-            const nodeData1 = {
-                "name": "abc",
-                "type": "object",
-                "optional": true,
-                "is_array": false,
-                "children": [
-                    {
-                        "name": "abc",
-                        "type": "string",
-                    },
-                    {
-                        "name": "ab",
-                        "type": "string",
-                    },
-                ],
-            };
-
-            const nodeData2 = {
-                "name": "ab",
-                "type": "object",
-                "optional": false,
-                "is_array": false,
-                "children": [
-                    {
-                        "name": "abc",
-                        "type": "string",
-                    },
-                    {
-                        "name": "ab",
-                        "type": "string",
-                    },
-                ],
-            };
-
-            const nodeData3 = {
-                "name": "abe",
-                "type": "string",
-            };
-            
-            const treeData = {
-                "schema_id": "asd",
-                "schema_body": [
-                    nodeData1,
-                    nodeData2,
-                    nodeData3,
-                ],
-            }
-
-            const configData = {
-                "abe": "bob",
-                "ab": {
-                    "abc": "def",
-                    "ab": "fgh"
-                },
-                "abc": {
-                    "abc": "def",
-                    "ab": "fgh"
-                }
-            }
-
-            const tree = new schemaTree(treeData);
-            console.log(tree);
-            console.log(validateConfig(tree, configData));
-            assert.equal(tree.isEmpty(), false);
-        });
     });
 
     describe("Schema Requests", async() => {
@@ -711,46 +644,47 @@ describe('Server Unit Tests', function() {
 
     describe("Validate Config", async () => {
         const nodeData1 = {
-            "name": "abc",
+            "name": "f1",
             "type": "object",
             "optional": true,
             "is_array": false,
             "children": [
                 {
-                    "name": "abc",
+                    "name": "b1",
                     "type": "string",
                 },
                 {
-                    "name": "ab",
-                    "type": "string",
+                    "name": "b2",
+                    "type": "boolean",
+                    "optional": true,
                 },
             ],
         };
 
         const nodeData2 = {
-            "name": "ab",
+            "name": "f2",
             "type": "object",
             "optional": false,
             "is_array": false,
             "children": [
                 {
-                    "name": "abc",
+                    "name": "b1",
                     "type": "string",
                 },
                 {
-                    "name": "ab",
-                    "type": "string",
+                    "name": "b2",
+                    "type": "number",
                 },
             ],
         };
 
         const nodeData3 = {
-            "name": "abe",
+            "name": "f3",
             "type": "string",
         };
         
         const treeData = {
-            "schema_id": "asd",
+            "schema_id": "s1",
             "schema_body": [
                 nodeData1,
                 nodeData2,
@@ -758,31 +692,79 @@ describe('Server Unit Tests', function() {
             ],
         }
 
-        const configData = {
-            "abe": "bob",
-            "ab": {
-                "abc": "def",
-                "ab": "fgh"
-            },
-            "abc": {
-                "abc": "def",
-                "ab": "fgh"
-            }
-        }
-        it("Valid - Missing Optionals", async () => {
+        const tree = new schemaTree(treeData);
 
+
+        it("Valid - Missing Optionals", async () => {
+            const configData1 = {
+                "f3": "bob",
+                "f2": {
+                    "b1": "foo",
+                    "b2": 5,
+                },
+            };
+            assert.equal(validateConfig(tree, configData1), true);
+
+            const configData2 = {
+                "f3": "bob",
+                "f2": {
+                    "b1": "foo",
+                    "b2": 5,
+                },
+                "f1": {
+                    "b1": "foo",
+                },
+            };
+            assert.equal(validateConfig(tree, configData2), true);
         });
 
         it("Invalid - Missing Non-optionals", async () => {
+            const configData1 = {
+                "f3": "bob",
+                "f1": {
+                    "b1": "foo",
+                    "b2": true,
+                },
+            };
+            assert.equal(validateConfig(tree, configData1), false);
 
+            const configData2 = {
+                "f3": "bob",
+                "f2": {
+                    "b1": "foo",
+                    "b2": 3,
+                },
+                "f1": {
+                    "b2": false,
+                },
+            };
+            assert.equal(validateConfig(tree, configData2), false);
         });
 
         it("Valid - Following Schema", async () => {
-            
+            const configData = {
+                "f3": "bob",
+                "f2": {
+                    "b1": "foo",
+                    "b2": 3,
+                },
+                "f1": {
+                    "b1": "bar",
+                    "b2": false,
+                },
+            };
+            assert.equal(validateConfig(tree, configData), true);
         });
 
         it("Invalid - Different From Schema", async () => {
-            
+            const configData = {
+                "a": 3,
+                "b": false,
+                "c": {
+                    "d": "foo",
+                }
+            };
+            assert.equal(validateConfig(tree, configData), false);
         });
     });
 });
