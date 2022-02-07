@@ -290,41 +290,6 @@ describe('Server Unit Tests', function() {
             assert.equal(db.get(configID), JSON.stringify(configBody));
         });
 
-        it('schema-node-test1', async () => {
-            const nodeData = {
-                "a": 1,
-            }
-
-            const node = new schemaNode(nodeData);
-            assert.equal(node.isEmpty(), true);
-        });
-
-        it('schema-node-test2', async () => {
-            const nodeData = {
-                "name": "abc",
-                "type": "object",
-                "optional": true,
-                "is_array": false,
-                "ff": "as",
-                "vv": 1,
-                "c": false,
-                "children": [
-                    {
-                        "name": "abc",
-                        "type": "string",
-                    },
-                    {
-                        "name": "ab",
-                        "type": "string",
-                    },
-                ],
-            }
-
-            const node = new schemaNode(nodeData);
-            console.log(node);
-            assert.equal(node.isEmpty(), false);
-        });
-
         it('schema-tree-test1', async () => {
             const nodeData = {
                 "name": "abc",
@@ -567,6 +532,140 @@ describe('Server Unit Tests', function() {
             await getSurvey(req, res, client, logs);
             assert.equal(logs.length, 1);
             assert.equal(logs[0], "");
+        });
+    });
+
+    describe("Schema Node", async () => {
+        it("Valid Node - Single", async () => {
+            const data = {
+                "name": "foo",
+                "type": "boolean",
+                "is_array": true,
+                "optional": false,
+                "children": [],
+            }
+            const node = new schemaNode(data);
+            assert.equal(node.isEmpty(), false);
+        });
+
+        it("Valid Node - Nested", async () => {
+            const data = {
+                "name": "foo",
+                "type": "boolean",
+                "is_array": true,
+                "optional": false,
+                "children": [
+                    {
+                        "name": "foo",
+                        "type": "object",
+                        "children": [
+                            {
+                                "name": "foo",
+                                "type": "boolean",
+                            },
+                            {
+                                "name": "bar",
+                                "type": "string",
+                            },
+                        ],
+                    },
+                    {
+                        "name": "bar",
+                        "type": "number",
+                        "optional": true,
+                    },
+                ],
+            }
+            const node = new schemaNode(data);
+            assert.equal(node.isEmpty(), false);
+        });
+
+        it("Missing Required Fields", async () => {
+            const data1 = {
+                "name": "abc",
+            };
+            let node = new schemaNode(data1);
+            assert.equal(node.isEmpty(), true);
+
+            const data2 = {
+                "type": "string",
+            };
+            node = new schemaNode(data2);
+            assert.equal(node.isEmpty(), true);
+        });
+
+        it("Type Errors", async () => {
+            const data1 = {
+                "name": "abc",
+                "type": 2,
+            };
+            let node = new schemaNode(data1);
+            assert.equal(node.isEmpty(), true);
+
+            const data2 = {
+                "name": "abc",
+                "type": "foo",
+            };
+            node = new schemaNode(data2);
+            assert.equal(node.isEmpty(), true);
+
+            const data3 = {
+                "name": "abc",
+                "type": "string",
+                "optional": 2,
+            };
+            node = new schemaNode(data3);
+            assert.equal(node.isEmpty(), true);
+
+            const data4 = {
+                "name": "abc",
+                "type": "string",
+                "optional": true,
+                "is_array": "bar",
+            };
+            node = new schemaNode(data4);
+            assert.equal(node.isEmpty(), true);
+        });
+
+        it("Unparsable Children", async () => {
+            const data1 = {
+                "name": "foo",
+                "type": "object",
+                "children": "abc",
+            };
+            let node = new schemaNode(data1);
+            assert.equal(node.isEmpty(), true);
+
+            const data2 = {
+                "name": "foo",
+                "type": "object",
+                "children": [
+                    {
+                        "name": "foo",
+                        "type": "not string",
+                    }
+                ],
+            };
+            node = new schemaNode(data2);
+            assert.equal(node.isEmpty(), true);
+        });
+    });
+
+    describe("Schema Tree", async () => {
+        it("Valid Tree", async () => {
+
+        });
+
+        it("Missing Required Fields", async () => {
+
+        });
+
+        it("Duplicate Children Node", async () => {
+            
+        });
+
+        it("Unparsable Node", async () => {
+            
         });
     });
 });
