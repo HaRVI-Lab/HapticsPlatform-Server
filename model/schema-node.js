@@ -1,4 +1,4 @@
-import { allowedTypes, stringType, numberType, booleanType, objectType, undefType } from "../constant/types.js";
+import { allowedTypes, stringType, booleanType, objectType, undefType } from "../constant/types.js";
 
 const requiredFields = {
     "name": nameCheck,
