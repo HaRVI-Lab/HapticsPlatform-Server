@@ -1,11 +1,9 @@
-// const express = require('express');
-// const fetch = require('node-fetch');
-// const redis = require('redis');
-
-import express, { application } from "express";
+import express from "express";
 import redis from "redis";
 import { setConfig, getConfig, delConfig, updateConfig } from "./requests/configRequests.js";
 import { setSchema, getSchema, delSchema, updateSchema } from "./requests/schemaRequests.js";
+import { setSurvey, getSurvey } from "./requests/surveyRequests.js";
+
 
 const PORT = process.env.PORT || 5000;
 
@@ -40,6 +38,10 @@ app.get('/schema/getSchema', getSchemaHandle);
 app.post('/schema/setSchema', setSchemaHandle);
 app.post('/schema/delSchema', delSchemaHandle);
 app.post('/schema/updateSchema', updateSchemaHandle);
+
+app.get('/survey/getSurvey', getSurveyHandle);
+
+app.post('/survey/setSurvey', setSurveyHandle);
 
 app.listen(PORT, () => {
     console.log(`Server listening on ${PORT}`);
@@ -78,3 +80,12 @@ async function delSchemaHandle(req, res, next) {
 async function updateSchemaHandle(req, res, next) {
     updateSchema(req, res, client);
 }
+
+async function setSurveyHandle(req, res, next) {
+    setSurvey(req, res, client);
+}
+
+async function getSurveyHandle(req, res, next) {
+    getSurvey(req, res, client, []);
+}
+
