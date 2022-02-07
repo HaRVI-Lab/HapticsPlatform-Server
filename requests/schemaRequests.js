@@ -71,7 +71,7 @@ export async function getSchema(req, res, client, logs) {
             msg = reply;
         }
         logs.push(msg);
-        sendResponse(res, 200, msg);
+        sendResponse(res, 200, JSON.parse(msg));
     } catch(err) {
         console.log(err);
     }
