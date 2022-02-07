@@ -11,6 +11,7 @@ import { setSurvey, getSurvey } from '../requests/surveyRequests.js';
 import { schemaNode } from "../model/schema-node.js";
 import { schemaTree } from "../model/schema-tree.js";
 import { validateConfig } from "../parse/parse-schema.js";
+import { undefType } from '../constant/types.js';
 
 let db = new Map();
 let client = redis.createClient();
@@ -162,6 +163,19 @@ describe('Server Unit Tests', function() {
             f1: "fo",
             f2: "ba",
         };
+        const schemaData = {
+            "schema_id": "s1",
+            "schema_body": [
+                {
+                    "name": "f1",
+                    "type": "string",
+                },
+                {
+                    "name": "f2",
+                    "type": "string",
+                }
+            ],
+        }
 
         it('setConfig - success', async () => {
             req.body = {
@@ -239,6 +253,105 @@ describe('Server Unit Tests', function() {
             };
             await updateConfig(req, res, client);
             assert.equal(db.get(configID), JSON.stringify(configBody));
+        });
+
+        it("setConfig - no schema - success", async () => {
+            req.body = {
+                "config_id": configID,
+                "config_body": {
+                    f3: "a",
+                },
+                "require_schema": false,
+            };
+            await setConfig(req, res, client);
+            assert.equal(db.get(configID), JSON.stringify({f3: "a"}));
+        });
+
+        it("setConfig - different from schema - fail", async () => {
+            req.body = {
+                "config_id": configID,
+                "config_body": {
+                    f3: "a",
+                },
+                "require_schema": true,
+            };
+            await setConfig(req, res, client);
+            assert.equal(db.size, 0);
+
+            req.body = schemaData;
+            await setSchema(req, res, client);
+            req.body = {
+                "config_id": configID,
+                "config_body": {
+                    f3: "a",
+                },
+                "require_schema": true,
+                "schema_id": "s1",
+            };
+            await setConfig(req, res, client);
+            assert.equal(typeof db.get(configID), undefType);
+        });
+
+        it("setConfig - follow schema - success", async () => {
+            req.body = schemaData;
+            await setSchema(req, res, client);
+            req.body = {
+                "config_id": configID,
+                "config_body": configBody,
+                "require_schema": true,
+                "schema_id": "s1",
+            };
+            await setConfig(req, res, client);
+            assert.equal(db.get(configID), JSON.stringify(configBody));
+        });
+
+        it("updateConfig - no schema - success", async () => {
+            db.set(configID, JSON.stringify(configBody));
+            req.body = {
+                "config_id": configID,
+                "config_body": updateBody,
+                "require_schema": false,
+            };
+            await updateConfig(req, res, client);
+            assert.equal(db.get(configID), JSON.stringify(updateBody));
+        });
+
+        it("updateConfig - different from schema - fail", async () => {
+            db.set(configID, JSON.stringify(configBody));
+            req.body = {
+                "config_id": configID,
+                "config_body": updateBody,
+                "require_schema": true,
+            };
+            await updateConfig(req, res, client);
+            assert.equal(db.get(configID), JSON.stringify(configBody));
+
+            req.body = schemaData;
+            await setSchema(req, res, client);
+            req.body = {
+                "config_id": configID,
+                "config_body": {
+                    f3: "foo",
+                },
+                "require_schema": true,
+                "schema_id": "s1",
+            };
+            await updateConfig(req, res, client);
+            assert.equal(db.get(configID), JSON.stringify(configBody));
+        });
+
+        it("updateConfig - follow schema - success", async () => {
+            db.set(configID, JSON.stringify(configBody));
+            req.body = schemaData;
+            await setSchema(req, res, client);
+            req.body = {
+                "config_id": configID,
+                "config_body": updateBody,
+                "require_schema": true,
+                "schema_id": "s1",
+            };
+            await updateConfig(req, res, client);
+            assert.equal(db.get(configID), JSON.stringify(updateBody));
         });
     });
 
