@@ -4,6 +4,7 @@ import sinon from "sinon";
 import { mockRequest, mockResponse } from 'mock-req-res';
 import { setConfigDAL, getConfigDAL, delConfigDAL, existConfigDAL } from "../dal/configDAL.js";
 import { setSchemaDAL, getSchemaDAL, delSchemaDAL, existSchemaDAL } from "../dal/schemaDAL.js";
+import { setSurveyLinkDAL, getSurveyLinkDAL } from '../dal/surveyDAL.js';
 import { setConfig, getConfig, delConfig, updateConfig } from "../requests/configRequests.js";
 import { schemaNode } from "../model/schema-node.js";
 import { schemaTree } from "../model/schema-tree.js";
@@ -45,7 +46,7 @@ describe('Server Unit Tests', function() {
         db = new Map();
     });
 
-    describe('DAL Functions', async () => {
+    describe('Config DAL Functions', async () => {
         const config_id = "mock_id1";
         const configData = {
             f1: "foo",
@@ -76,8 +77,9 @@ describe('Server Unit Tests', function() {
             const reply = await existConfigDAL(client, config_id);
             assert.equal(reply, true);
         });
-
+    });    
         
+    describe('Schema DAL Functions', async () => {
         const schema_id = "mock_id1";
         const schemaDALTestData = {
             "name": "f1",
@@ -124,6 +126,22 @@ describe('Server Unit Tests', function() {
             db.set(schema_id, dataStr);
             const reply = await existSchemaDAL(client, schema_id);
             assert.equal(reply, true);
+        });
+    });
+
+    describe('Survey DAL Functions', async () => {
+        const survey_id = "mock_survey_1";
+        const survey_link = "mock_link";
+
+        it('setSurvelyLinkDAL', async() => {
+            await setSurveyLinkDAL(client, survey_id, survey_link);
+            assert.equal(db.get(survey_id), survey_link);
+        });
+
+        it('getSurvelyLinkDAL', async() => {
+            db.set(survey_id, survey_link);
+            const { _, reply } = await getSchemaDAL(client, survey_id);
+            assert.equal(reply, survey_link);
         });
     });
 
