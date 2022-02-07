@@ -147,7 +147,7 @@ describe('Server Unit Tests', function() {
         });
     });
 
-    describe('Requests', async () => {
+    describe('Config Requests', async () => {
         this.beforeEach(() => {
             req = mockRequest();
             res = mockResponse();
@@ -652,19 +652,136 @@ describe('Server Unit Tests', function() {
     });
 
     describe("Schema Tree", async () => {
-        it("Valid Tree", async () => {
+        const validNode = {
+            "name": "foo",
+            "type": "string",
+        };
 
+        it("Valid Tree", async () => {
+            const treeData = {
+                "schema_id": "s1",
+                "schema_body": [
+                    validNode,
+                ],
+            };
+            const tree = new schemaTree(treeData);
+            assert.equal(tree.isEmpty(), false);
         });
 
         it("Missing Required Fields", async () => {
+            const tree1 = {
+                "schema_body": [
+                    validNode,
+                ],
+            };
+            let tree = new schemaTree(tree1);
+            assert.equal(tree.isEmpty(), true);
 
+            const tree2 = {
+                "schema_id": "s1",
+            };
+            tree = new schemaTree(tree2);
+            assert.equal(tree.isEmpty(), true);
         });
 
         it("Duplicate Children Node", async () => {
-            
+            const treeData = {
+                "schema_body": [
+                    validNode,
+                    validNode,
+                ],
+            };
+            const tree = new schemaTree(treeData);
+            assert.equal(tree.isEmpty(), true);
         });
 
         it("Unparsable Node", async () => {
+            const treeData = {
+                "schema_id": "s1",
+                "schema_body": [
+                    {
+                        "name": "foo",
+                    },
+                ],
+            };
+            const tree = new schemaTree(treeData);
+            assert.equal(tree.isEmpty(), true);
+        });
+    });
+
+    describe("Validate Config", async () => {
+        const nodeData1 = {
+            "name": "abc",
+            "type": "object",
+            "optional": true,
+            "is_array": false,
+            "children": [
+                {
+                    "name": "abc",
+                    "type": "string",
+                },
+                {
+                    "name": "ab",
+                    "type": "string",
+                },
+            ],
+        };
+
+        const nodeData2 = {
+            "name": "ab",
+            "type": "object",
+            "optional": false,
+            "is_array": false,
+            "children": [
+                {
+                    "name": "abc",
+                    "type": "string",
+                },
+                {
+                    "name": "ab",
+                    "type": "string",
+                },
+            ],
+        };
+
+        const nodeData3 = {
+            "name": "abe",
+            "type": "string",
+        };
+        
+        const treeData = {
+            "schema_id": "asd",
+            "schema_body": [
+                nodeData1,
+                nodeData2,
+                nodeData3,
+            ],
+        }
+
+        const configData = {
+            "abe": "bob",
+            "ab": {
+                "abc": "def",
+                "ab": "fgh"
+            },
+            "abc": {
+                "abc": "def",
+                "ab": "fgh"
+            }
+        }
+        it("Valid - Missing Optionals", async () => {
+
+        });
+
+        it("Invalid - Missing Non-optionals", async () => {
+
+        });
+
+        it("Valid - Following Schema", async () => {
+            
+        });
+
+        it("Invalid - Different From Schema", async () => {
             
         });
     });
