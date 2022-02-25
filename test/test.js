@@ -179,22 +179,24 @@ describe('Server Unit Tests', function() {
 
         it('setConfig - success', async () => {
             req.body = {
-                "config_id": configID,
+                // "config_id": configID,
                 "config_body": configBody,
             };
-            await setConfig(req, res, client);
-            assert.equal(db.get(configID), JSON.stringify(configBody));
+            let logs = [];
+            await setConfig(req, res, client, logs);
+            assert.equal(db.get(logs[0]), JSON.stringify(configBody));
         });
         
-        it('setConfig - fail', async () => {
-            db.set(configID, JSON.stringify(configBody));
-            req.body = {
-                "config_id": configID,
-                "config_body": updateBody,
-            };
-            await setConfig(req, res, client);
-            assert.equal(db.get(configID), JSON.stringify(configBody));
-        });
+        // it('setConfig - fail', async () => {
+        //     db.set(configID, JSON.stringify(configBody));
+        //     req.body = {
+        //         // "config_id": configID,
+        //         "config_body": updateBody,
+        //     };
+        //     let logs = [];
+        //     await setConfig(req, res, client, logs);
+        //     assert.equal(db.get(logs[0]), JSON.stringify(configBody));
+        // });
 
         it('getConfig - valid', async () => {
             db.set(configID, JSON.stringify(configBody));
@@ -257,39 +259,42 @@ describe('Server Unit Tests', function() {
 
         it("setConfig - no schema - success", async () => {
             req.body = {
-                "config_id": configID,
+                // "config_id": configID,
                 "config_body": {
                     f3: "a",
                 },
                 "require_schema": false,
             };
-            await setConfig(req, res, client);
-            assert.equal(db.get(configID), JSON.stringify({f3: "a"}));
+            let logs = [];
+            await setConfig(req, res, client, logs);
+            assert.equal(db.get(logs[0]), JSON.stringify({f3: "a"}));
         });
 
         it("setConfig - different from schema - fail", async () => {
             req.body = {
-                "config_id": configID,
+                // "config_id": configID,
                 "config_body": {
                     f3: "a",
                 },
                 "require_schema": true,
             };
-            await setConfig(req, res, client);
+            let logs = [];
+            await setConfig(req, res, client, logs);
             assert.equal(db.size, 0);
 
             req.body = schemaData;
             await setSchema(req, res, client);
             req.body = {
-                "config_id": configID,
+                // "config_id": configID,
                 "config_body": {
                     f3: "a",
                 },
                 "require_schema": true,
                 "schema_id": "s1",
             };
-            await setConfig(req, res, client);
-            assert.equal(typeof db.get(configID), undefType);
+            logs = [];
+            await setConfig(req, res, client, logs);
+            assert.equal(typeof db.get(logs[0]), undefType);
         });
 
         it("setConfig - follow schema - success", async () => {
@@ -301,8 +306,9 @@ describe('Server Unit Tests', function() {
                 "require_schema": true,
                 "schema_id": "s1",
             };
-            await setConfig(req, res, client);
-            assert.equal(db.get(configID), JSON.stringify(configBody));
+            let logs = [];
+            await setConfig(req, res, client, logs);
+            assert.equal(db.get(logs[0]), JSON.stringify(configBody));
         });
 
         it("updateConfig - no schema - success", async () => {
@@ -397,6 +403,7 @@ describe('Server Unit Tests', function() {
                 "schema_id": schema_id,
             };
             let logs = [];
+            
             await getSchema(req, res, client, logs);
             assert.equal(logs.length, 1);
             assert.equal(logs[0], JSON.stringify(tree));

@@ -50,7 +50,7 @@ app.listen(PORT, () => {
 
 
 async function setConfigHandle(req, res, next) {
-    setConfig(req, res, client);
+    setConfig(req, res, client, []);
 }
 
 async function getConfigHandle(req, res, next) {

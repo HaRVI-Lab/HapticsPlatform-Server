@@ -3,12 +3,24 @@ import { checkSchema } from "../parse/parse-schema.js";
 import { stringType, booleanType, objectType } from "../constant/types.js";
 import { sendResponse } from "../util/response.js";
 
-export async function setConfig(req, res, client) {
-    const { config_id, config_body, require_schema, schema_id } = req.body;
-    if(typeof config_id !== stringType) {
-        sendResponse(res, 200, "Config ID must be string.");
-        return;
+export async function setConfig(req, res, client, logs) {
+    const { config_body, require_schema, schema_id } = req.body;
+    // if(typeof config_id !== stringType) {
+    //     sendResponse(res, 200, "Config ID must be string.");
+    //     return;
+    // }
+    const upper = 100000;
+    let config_id = "";
+    while(true) {
+        let id_num = Math.random() * upper;
+        config_id = "config_" + id_num;
+        let reply = await existConfigDAL(client, config_id);
+        if(!reply) {
+            break;
+        }   
     }
+
+    logs.push(config_id);
 
     if(typeof config_body !== objectType) {
         sendResponse(res, 200, "Config body not a valid JSON.");
@@ -16,11 +28,11 @@ export async function setConfig(req, res, client) {
     }
 
     try {
-        let reply = await existConfigDAL(client, config_id);
-        if(reply) {
-            sendResponse(res, 200, "Configuration already set.");
-            return;
-        }
+        // let reply = await existConfigDAL(client, config_id);
+        // if(reply) {
+        //     sendResponse(res, 200, "Configuration already set.");
+        //     return;
+        // }
 
         if(typeof require_schema === booleanType && require_schema)  {
             if(typeof schema_id !== stringType) {
@@ -37,7 +49,7 @@ export async function setConfig(req, res, client) {
         
         let success = await setConfigDAL(client, config_id, config_body);
         if(success) {
-            sendResponse(res, 200, "Configuration successfully set.");
+            sendResponse(res, 200, config_id);
         } else {
             sendResponse(res, 500, "Internal server error.");
         }
