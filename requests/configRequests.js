@@ -12,7 +12,7 @@ export async function setConfig(req, res, client, logs) {
     const upper = 100000;
     let config_id = "";
     while(true) {
-        let id_num = Math.random() * upper;
+        let id_num = Math.floor(Math.random() * upper);
         config_id = "config_" + id_num;
         let reply = await existConfigDAL(client, config_id);
         if(!reply) {
