@@ -27,19 +27,19 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get('/config/getConfig', getConfigHandle);
+app.post('/config/getConfig', getConfigHandle);
 
 app.post('/config/setConfig', setConfigHandle);
 app.post('/config/delConfig', delConfigHandle);
 app.post('/config/updateConfig', updateConfigHandle);
 
-app.get('/schema/getSchema', getSchemaHandle);
+app.post('/schema/getSchema', getSchemaHandle);
 
 app.post('/schema/setSchema', setSchemaHandle);
 app.post('/schema/delSchema', delSchemaHandle);
 app.post('/schema/updateSchema', updateSchemaHandle);
 
-app.get('/survey/getSurvey', getSurveyHandle);
+app.post('/survey/getSurvey', getSurveyHandle);
 
 app.post('/survey/setSurvey', setSurveyHandle);
 
