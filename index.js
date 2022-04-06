@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 5000;
 
 let config = {};
 if(process.env.NODE_ENV != "development") {
-    config["url"] = "redis://:p301824da061453386cd783a736ed5284d7a5d793523606dfafbd7b57c54bdcd9@ec2-52-5-119-72.compute-1.amazonaws.com:30970";
+    config["url"] = "redis://:p301824da061453386cd783a736ed5284d7a5d793523606dfafbd7b57c54bdcd9@ec2-52-5-119-72.compute-1.amazonaws.com:30969";
 } else {
     console.log("Dev mode running...");
 }
