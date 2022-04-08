@@ -13,7 +13,7 @@ export async function setConfig(req, res, client, logs) {
     let config_id = "";
     while(true) {
         let id_num = Math.floor(Math.random() * upper);
-        config_id = id_num;
+        config_id = id_num + "";
         let reply = await existConfigDAL(client, config_id);
         if(!reply) {
             break;
